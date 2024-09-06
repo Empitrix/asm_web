@@ -1,0 +1,77 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap');
+
+* {
+	margin: 0px;
+	font-family: "Roboto";
+	user-select: none;
+}
+
+body {
+  overflow-y: hidden; /* Hide vertical scrollbar */
+  overflow-x: hidden; /* Hide horizontal scrollbar */
+
+	background-color: #172139;
+}
+
+
+h1 {
+	margin: 12px;
+	color: #FFFFFF;
+}
+
+.row{
+	display: inline-flex;
+	width: 100%;
+	flex-direction: row;
+	align-items: center;
+
+}
+
+textarea {
+	font-family: "Roboto Mono";
+	border-radius: 0.25rem;
+	background-color: #353439;
+	color: #FFFFFF;
+  border: 1px solid transparent;
+	margin: 5px;
+	font-size: 20px;
+  padding: 3px;
+	outline: none;
+
+	user-select: auto;
+	height: 550px;
+}
+
+.editor{
+	width: calc(50%);
+}
+
+.compiled{
+	width: calc(50% - 30px);
+}
+
+
+.array{
+	width: calc(100% - 20px);
+	height: 80px;
+}
+
+
+
+button {
+	background-color: #1565C0;
+	outline: none;
+	border-radius: 5px;
+	border: 1px solid transparent;
+	color: #FFFFFF;
+	font-size: 14px;
+	padding: 10px 20px;
+	margin: 25px;
+}
+
+button:hover{
+	background-color: #0D47A1;
+	cursor: pointer;
+}
+

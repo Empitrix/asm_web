@@ -118,10 +118,25 @@ function getItem(input:Map<string, number>, need:string): number | undefined {
 }
 
 
+type Line = {
+	line: string;
+	binary: string;
+	value: number;
+	total: string;
+}
 
-function assembler(data:string): Array<number> | undefined {
+
+type ErrOut = {
+	index: number;
+	line: string;
+	obj: string,
+	message: string;
+};
+
+
+function assembler(data:string): Array<Line> | ErrOut {
 	let lines:Array<string> = data.split("\n");
-	let machineCode:Array<number> = [];
+	let machineCode:Array<Line> = [];
 
 	let labels:Map<string, number> = new Map<string, number>();
 	// let equ_const:Array<Map<string, number>> = [];
@@ -153,8 +168,7 @@ function assembler(data:string): Array<number> | undefined {
 			let label:string = line.split(":")[0];
 			// console.log(`LABEL: ${label}`);
 			if(labels.has(label)){
-				console.log(`Duplicate label: (${label}) at line (${i + 1})\n\t==> ${lines[i]}`)
-				return undefined;
+				return {index: i, obj: label, message: 'Duplicate label', line: line};
 			} else {
 				labels.set(label, machineCode.length);
 			}
@@ -168,7 +182,7 @@ function assembler(data:string): Array<number> | undefined {
 			// console.log(`PARTS: ${parts}`);
 			if(parts.length != 3){
 				console.log(`Invalid EQU line: ${line} at line ${i + 1}\n\t==> ${lines[i]}`);
-				return undefined;
+				return {index: i, obj: "", message: 'Invalid EQU line', line: line};
 			} else {
 				equ_const.set(parts[0], parseInt(parts[2], 16));
 			}
@@ -200,11 +214,13 @@ function assembler(data:string): Array<number> | undefined {
 
 			if(bit > (1 << bbb_size) - 1){
 				console.log(`Invalid bit: '${bit}' at line (${i + 1})\n\t==> ${lines[i]}`);
-				return undefined;}
+				return {index: i, obj: `${bit}`, message: 'Invalid bit', line: line};
+			}
 
 			if(regn > (1 << fff_size) - 1){
-				console.log(`Invalid register: '${bit}' at line (${i + 1})\n\t==> ${lines[i]}`);
-				return undefined;}
+				console.log(`Invalid register: '${regn}' at line (${i + 1})\n\t==> ${lines[i]}`);
+				return {index: i, obj: `${regn}`, message: 'Invalid register', line: line};
+			}
 
 			if(opcode == "BSF"){
 				instruction = 0b010100000000 | (bit << 5) | regn;
@@ -217,14 +233,14 @@ function assembler(data:string): Array<number> | undefined {
 			let val:number | undefined = eLiteral(operands[0]);
 			if(val == undefined){
 				console.log(`Invalid value at line (${i + 1})\n\t==>${lines[i]}`);
-				return undefined;
+				return {index: i, obj: "", message: 'Invalid value', line: line};
 			}
 			instruction = 0b110000000000 | val;
 
 		} else if(opcode == "MOVWF"){
 			if(operands[0] == undefined){
 				console.log(`No operand at line ${i + i}\n\t==> ${lines[i]}`);
-				return undefined;
+				return {index: i, obj: "", message: 'No operand', line: line};
 			}
 			let reg:string = operands[0];
 			let regn:number | undefined = 0;
@@ -235,8 +251,7 @@ function assembler(data:string): Array<number> | undefined {
 				if(val != undefined){
 					instruction = setByMask(0b000000100000, 0b000000011111, val);
 				} else {
-					console.log(`(E)Invalid operands at line (${i + 1})\n\t==>${lines[i]}`)
-					return undefined;
+					return {index: i, obj: "", message: 'Invalid operands', line: line};
 				}
 			}
 
@@ -245,7 +260,7 @@ function assembler(data:string): Array<number> | undefined {
 		} else if(opcode == "CLRF"){
 			if(operands[0] == undefined){
 				console.log(`No operand at line ${i + i}\n\t==> ${lines[i]}`);
-				return undefined;
+				return {index: i, obj: "", message: 'No operand', line: line};
 			}
 			let reg:string = operands[0];
 			let regn:number | undefined = 0;
@@ -256,8 +271,8 @@ function assembler(data:string): Array<number> | undefined {
 				if(val != undefined){
 					instruction = setByMask(0b000001100000, 0b000000011111, val);
 				} else {
-					console.log(`(E)Invalid operands at line (${i + 1})\n\t==>${lines[i]}`)
-					return undefined;
+					console.log(`Invalid operands at line (${i + 1})\n\t==>${lines[i]}`)
+					return {index: i, obj: "", message: 'Invalid operands', line: line};
 				}
 			}
 
@@ -272,14 +287,14 @@ function assembler(data:string): Array<number> | undefined {
 		} else if (opcode == "DECF"){
 			if(operands[0] == undefined || operands[1] == undefined){
 				console.log(`No operand at line ${i + i}\n\t==> ${lines[i]}`);
-				return undefined;
+				return {index: i, obj: "", message: 'No operand', line: line};
 			}
 			let reg:string = operands[0];
 			let regn:number | undefined = 0;
 			let bit:number = parseInt(operands[1], 10);
 			if(bit != 1 && bit != 0){
 				console.log(`Invalid Bit Number (${bit}) at line ${i + 1}\n\t==>${lines[i]}\n`);
-				return undefined;
+				return {index: i, obj: `${bit}`, message: 'Invalid Bit Number', line: line};
 			}
 
 			if((regn = getItem(equ_const, reg)) != undefined){
@@ -290,7 +305,7 @@ function assembler(data:string): Array<number> | undefined {
 					instruction = 0b000011000000 | (bit << 5) | val;
 				} else {
 					console.log(`Invalid operands at line (${i + 1})\n\t==>${lines[i]}`)
-					return undefined;
+					return {index: i, obj: "", message: 'Invalid operands', line: line};
 				}
 			}
 
@@ -298,14 +313,14 @@ function assembler(data:string): Array<number> | undefined {
 		} else if (opcode == "DECFSZ"){
 			if(operands[0] == undefined || operands[1] == undefined){
 				console.log(`No operand at line ${i + i}\n\t==> ${lines[i]}`);
-				return undefined;
+				return {index: i, obj: "", message: 'No operand', line: line};
 			}
 			let reg:string = operands[0];
 			let regn:number | undefined = 0;
 			let bit:number = parseInt(operands[1], 10);
 			if(bit != 1 && bit != 0){
 				console.log(`Invalid Bit Number (${bit}) at line ${i + 1}\n\t==>${lines[i]}\n`);
-				return undefined;
+				return {index: i, obj: `${bit}`, message: 'Invalid Bit Number', line: line};
 			}
 
 			if((regn = getItem(equ_const, reg)) != undefined){
@@ -316,7 +331,7 @@ function assembler(data:string): Array<number> | undefined {
 					instruction = 0b001011000000 | (bit << 5) | val;
 				} else {
 					console.log(`Invalid operands at line (${i + 1})\n\t==>${lines[i]}`)
-					return undefined;
+					return {index: i, obj: "", message: 'Invalid operands', line: line};
 				}
 			}
 
@@ -325,14 +340,14 @@ function assembler(data:string): Array<number> | undefined {
 		} else if(opcode == "INCF"){
 			if(operands[0] == undefined || operands[1] == undefined){
 				console.log(`No operand at line ${i + i}\n\t==> ${lines[i]}`);
-				return undefined;
+				return {index: i, obj: "", message: 'No operand', line: line};
 			}
 			let reg:string = operands[0];
 			let regn:number | undefined = 0;
 			let bit:number = parseInt(operands[1], 10);
 			if(bit != 1 && bit != 0){
 				console.log(`Invalid Bit Number (${bit}) at line ${i + 1}\n\t==>${lines[i]}\n`);
-				return undefined;
+				return {index: i, obj: `${bit}`, message: 'Invalid Bit Number', line: line};
 			}
 			if((regn = getItem(equ_const, reg)) != undefined){
 				instruction = 0b001010000000 | (bit << 5) | regn;
@@ -342,7 +357,7 @@ function assembler(data:string): Array<number> | undefined {
 					instruction = 0b001010000000 | (bit << 5) | val;
 				} else {
 					console.log(`Invalid operands at line (${i + 1})\n\t==>${lines[i]}`)
-					return undefined;
+					return {index: i, obj: "", message: 'Invalid operands', line: line};
 				}
 			}
 
@@ -350,14 +365,14 @@ function assembler(data:string): Array<number> | undefined {
 		} else if(opcode == "INCFSZ"){
 			if(operands[0] == undefined || operands[1] == undefined){
 				console.log(`No operand at line ${i + i}\n\t==> ${lines[i]}`);
-				return undefined;
+				return {index: i, obj: "", message: 'No operand', line: line};
 			}
 			let reg:string = operands[0];
 			let regn:number | undefined = 0;
 			let bit:number = parseInt(operands[1], 10);
 			if(bit != 1 && bit != 0){
 				console.log(`Invalid Bit Number (${bit}) at line ${i + 1}\n\t==>${lines[i]}\n`);
-				return undefined;
+				return {index: i, obj: `${bit}`, message: 'Invalid Bit Number', line: line};
 			}
 			if((regn = getItem(equ_const, reg)) != undefined){
 				instruction = 0b001111000000 | (bit << 5) | regn;
@@ -367,14 +382,14 @@ function assembler(data:string): Array<number> | undefined {
 					instruction = 0b001111000000 | (bit << 5) | val;
 				} else {
 					console.log(`Invalid operands at line (${i + 1})\n\t==>${lines[i]}`)
-					return undefined;
+					return {index: i, obj: "", message: 'Invalid operands', line: line};
 				}
 			}
 
 		} else if(opcode == "BTFSS"){
 			if(operands[0] == undefined || operands[1] == undefined){
 				console.log(`No operand at line ${i + i}\n\t==> ${lines[i]}`);
-				return undefined;
+				return {index: i, obj: "", message: 'No operand', line: line};
 			}
 			let reg:string = operands[0];
 			let regn:number | undefined = 0;
@@ -388,7 +403,7 @@ function assembler(data:string): Array<number> | undefined {
 					instruction = 0b011000000000 | (bit << 5) | val;
 				} else {
 					console.log(`Invalid operands at line (${i + 1})\n\t==>${lines[i]}`)
-					return undefined;
+					return {index: i, obj: "", message: 'Invalid operands', line: line};
 				}
 			}
 
@@ -396,7 +411,7 @@ function assembler(data:string): Array<number> | undefined {
 		} else if(opcode == "BTFSC"){
 			if(operands[0] == undefined || operands[1] == undefined){
 				console.log(`No operand at line ${i + i}\n\t==> ${lines[i]}`);
-				return undefined;
+				return {index: i, obj: "", message: 'No operand', line: line};
 			}
 			let reg:string = operands[0];
 			let regn:number | undefined = 0;
@@ -410,7 +425,7 @@ function assembler(data:string): Array<number> | undefined {
 					instruction = 0b011100000000 | (bit << 5) | val;
 				} else {
 					console.log(`Invalid operands at line (${i + 1})\n\t==>${lines[i]}`)
-					return undefined;
+					return {index: i, obj: "", message: 'Invalid operands', line: line};
 				}
 			}
 
@@ -420,7 +435,7 @@ function assembler(data:string): Array<number> | undefined {
 			let address:number = 0;
 			if(getItem(labels, label) == undefined){
 				console.log(`Label name (${label}) not found at line (${i + i})\n\t==> ${lines[i]}`);
-				return undefined;
+				return {index: i, obj: label, message: 'Label name not found', line: line};
 			} else {
 				address = getItem(labels, label) as number;
 			}
@@ -433,11 +448,17 @@ function assembler(data:string): Array<number> | undefined {
 
 		} else {
 			console.log(`Invalid opcode: ${opcode}`);
-			return undefined;
+			return {index: i, obj: opcode, message: "Invalid Opcode", line: line};
 		}
 
 		console.log(`${line.padEnd(18)} | 0b${instruction.toString(2).padStart(12, '0')}`);
-		machineCode.push(instruction);
+		machineCode.push({
+			line: line,
+			value: instruction,
+			binary: `0b${instruction.toString(2).padStart(12, '0')}`,
+			total: `${line.padEnd(15)}0b${instruction.toString(2).padStart(12, '0')}`
+			});
+		
 	}
 
 	// console.log(`\n\n\tEQU CONST: ${[...equ_const.entries()]}`);
@@ -460,4 +481,46 @@ function assembler(data:string): Array<number> | undefined {
 	return machineCode;
 }
 
-assembler(asm_file);
+
+
+function intToBinary(decimal: number): string {
+	const binaryString = decimal.toString(2);
+	const paddedBinaryString = binaryString.padStart(12, '0');
+	return `0b${paddedBinaryString}`;
+}
+
+
+function translateEvent(){
+
+	let data:string = (<HTMLInputElement>document.getElementById("editor")).value;
+
+	let result:Array<Line> | ErrOut = assembler(data);
+	let viewData:string = "int program[] = {";
+	let resultData:string = "";
+
+	if(typeof result === 'object' && !("index" in result)){
+		for(let i = 0; i < result.length; ++i){
+			if(i != result.length - 1){
+				viewData += `${result[i].value}, `;
+			} else {
+				viewData += `${result[i].value}`;
+			}
+			resultData  += `${result[i].total}\n`
+		}
+	} else {
+		resultData += `${result.message} `;
+		resultData += `(${result.index + 1}) `;
+		if(result.obj != ""){
+			resultData += `[${result.obj}]\n\n`
+		} else {
+			resultData += `\n\n`
+		}
+		resultData += `${result.line}`
+	}
+
+	viewData += "};";
+
+	(document.getElementById("arrayView") as HTMLInputElement).value = viewData;
+	(document.getElementById("resultView") as HTMLInputElement).value = resultData;
+}
+

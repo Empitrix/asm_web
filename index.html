@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Assembler</title>
+  <link rel="stylesheet" href="styles.css">
+
+	<script language="javascript" type="text/javascript" src="/static/js/codemirror-5.62.0/lib/codemirror.js"></script>
+	<link rel="stylesheet" type="text/css" href="/static/js/codemirror-5.62.0/lib/codemirror.css"></link>
+	<script language="javascript" type="text/javascript" src="/codemirror-5.62.0/addon/edit/matchbrackets.js"></script>
+	<script language="javascript" type="text/javascript" src="/static/js/codemirror-5.62.0/mode/perl/perl.js"></script>
+
+	<script type="text/javascript" src="./dist/main.js"></script>
+</head>
+
+<body>
+
+	<div class="row">
+		<h1>Assembler</h1>
+		<button onclick="translateEvent(this)">Translate</button>
+	</div>
+
+
+	<div class="row">
+		<textarea id="editor" class="editor" spellcheck="false"></textarea>
+		<textarea id="resultView" class="compiled" spellcheck="false"></textarea>
+	</div>
+
+
+	<textarea id="arrayView" class="array" spellcheck="false"></textarea>
+ 
+	<script>
+
+ var inputField = document.getElementById('editor'); // get textarea object
+	inputField.onkeydown = function(e) { // list for when any key is pressed
+	if (e.keyCode === 9) { // block to catch when tab key is pressed
+		this.setRangeText(
+			'\t',
+			this.selectionStart,
+			this.selectionStart,
+			'end'
+		)
+		return false; //prevent default action
+	}
+ };
+ </script>
+ 
+
+</body>
+</html>
