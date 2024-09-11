@@ -1,6 +1,8 @@
 # Assembler for Web
 This website is based on [assembler](https://github.com/empitrix/assembler);
 
+[**Click here to try it**](https://empitrix.github.io/asm_web/)
+
 ## Build
 
 To build the project you need to install:
