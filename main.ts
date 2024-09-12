@@ -15,7 +15,7 @@ start:
 function quotedLetter(str: string): string | undefined {
 	if (str.length === 3 && str.startsWith("'") && str.endsWith("'")) {
 		return str.charAt(1);
-	} else if (str.length === 4 && str.startsWith("'\\'") && str.endsWith("'")) {
+	} else if (str.length === 4 && str.startsWith("'\\") && str.endsWith("'")) {
 		const escapeChar = str.charAt(2);
 		switch (escapeChar) {
 			case 'n':
